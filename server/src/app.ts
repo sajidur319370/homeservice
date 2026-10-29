@@ -3,6 +3,8 @@ import { pool } from "./db/client.ts";
 import { requestLogger, securityHeaders } from "./middleware/basics.ts";
 import { errorHandler, notFound } from "./middleware/error.ts";
 import authRoutes from "./routes/auth.ts";
+import categoryRoutes from "./routes/categories.ts";
+import serviceRoutes from "./routes/services.ts";
 
 export const app = express();
 
@@ -20,6 +22,8 @@ app.get("/api/health", async (_req, res) => {
 
 // ── Routes are added here from Day 3 (ABOVE notFound) ──
 app.use("/api/auth", authRoutes);
+app.use("/api/categories", categoryRoutes);
+app.use("/api/services", serviceRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
