@@ -4,6 +4,7 @@ import { requestLogger, securityHeaders } from "./middleware/basics.ts";
 import { errorHandler, notFound } from "./middleware/error.ts";
 import authRoutes from "./routes/auth.ts";
 import categoryRoutes from "./routes/categories.ts";
+import providerRoutes from "./routes/providers.ts";
 import serviceRoutes from "./routes/services.ts";
 
 export const app = express();
@@ -24,6 +25,7 @@ app.get("/api/health", async (_req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/services", serviceRoutes);
+app.use("/api/providers", providerRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
