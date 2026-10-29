@@ -3,6 +3,7 @@ import { pool } from "./db/client.ts";
 import { requestLogger, securityHeaders } from "./middleware/basics.ts";
 import { errorHandler, notFound } from "./middleware/error.ts";
 import authRoutes from "./routes/auth.ts";
+import bookingRoutes from "./routes/bookings.ts";
 import categoryRoutes from "./routes/categories.ts";
 import providerRoutes from "./routes/providers.ts";
 import serviceRoutes from "./routes/services.ts";
@@ -26,6 +27,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/services", serviceRoutes);
 app.use("/api/providers", providerRoutes);
+app.use("/api/bookings", bookingRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
