@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    // Node runs our .ts files directly (type stripping), so tsc only CHECKS types.
+    "noEmit": true,
+    "target": "es2024",
+    "lib": ["es2024"],
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "types": ["node"],
+
+    // Only allow TypeScript that Node can run by deleting the types:
+    // no enums, no namespaces, no constructor parameter properties.
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "allowImportingTsExtensions": true,
+
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "skipLibCheck": true
+  },
+  "include": ["src", "test", "scripts"]
+}

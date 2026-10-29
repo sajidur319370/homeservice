@@ -1,0 +1,33 @@
+{
+  "name": "homeservice-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "HomeService API: home-service booking for Dhaka (Express + PostgreSQL, TypeScript)",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "node --watch --env-file-if-exists=.env src/index.ts",
+    "start": "node --env-file-if-exists=.env src/index.ts",
+    "typecheck": "tsc",
+    "db:migrate": "node --env-file-if-exists=.env src/db/migrate.ts",
+    "db:seed": "node --env-file-if-exists=.env src/db/seed.ts",
+    "test": "node --env-file-if-exists=.env.test --test \"test/**/*.test.ts\"",
+    "race": "node scripts/race.ts",
+    "test:setup": "node --env-file-if-exists=.env.test src/db/migrate.ts && node --env-file-if-exists=.env.test src/db/seed.ts"
+  },
+  "dependencies": {
+    "express": "^5.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.23.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^26.6.6",
+    "@types/pg": "^8.23.1",
+    "typescript": "^7.0.2"
+  }
+}
