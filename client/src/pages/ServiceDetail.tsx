@@ -59,9 +59,19 @@ export default function ServiceDetail() {
   if (loadError) return <ErrorText>{loadError}</ErrorText>;
   if (!service) return <p className="muted">Loading…</p>;
 
+  // Providers and admins can't book: they see the free times read-only, as information.
+  const viewOnly = user !== null && user.role !== "CUSTOMER";
+  const ownService = user?.role === "PROVIDER" && user.id === service.providerId;
+
   return (
     <div className="stack">
       <Link to="/">← All services</Link>
+      {ownService && (
+        <div className="alert alert-ok row between wrap">
+          <span>This is your service, shown as customers see it.</span>
+          <Link to="/provider">Edit in dashboard →</Link>
+        </div>
+      )}
       <div className="card">
         <div className="row between">
           <span className="badge badge-teal">{service.categoryName}</span>
@@ -86,16 +96,22 @@ export default function ServiceDetail() {
 
         {date && (
           <>
-            <h2>Pick a time</h2>
+            <h2>{viewOnly ? "Free times (customers can book these)" : "Pick a time"}</h2>
             <ErrorText>{slots.error}</ErrorText>
             {slots.loading && <p className="muted">Loading free times…</p>}
             {slots.data?.slots.length === 0 && <p className="muted">No free times on this day. Try another date.</p>}
             <div className="row wrap">
-              {slots.data?.slots.map((s) => (
-                <button key={s} className={`chip ${s === picked ? "chip-on" : ""}`} onClick={() => setPicked(s)}>
-                  {formatTime(s)}
-                </button>
-              ))}
+              {slots.data?.slots.map((s) =>
+                viewOnly ? (
+                  <span key={s} className="chip chip-static">
+                    {formatTime(s)}
+                  </span>
+                ) : (
+                  <button key={s} className={`chip ${s === picked ? "chip-on" : ""}`} onClick={() => setPicked(s)}>
+                    {formatTime(s)}
+                  </button>
+                ),
+              )}
             </div>
           </>
         )}
@@ -108,7 +124,14 @@ export default function ServiceDetail() {
             as a customer to book.
           </p>
         )}
-        {user && user.role !== "CUSTOMER" && <p className="alert">Only customers can book services.</p>}
+        {user?.role === "PROVIDER" && !ownService && (
+          <p className="alert">You're logged in as a provider. Only customers can book, so these times are for information.</p>
+        )}
+        {user?.role === "ADMIN" && (
+          <p className="alert">
+            Viewing as admin. Only customers can book. <Link to="/admin">Manage providers in Admin →</Link>
+          </p>
+        )}
         {user?.role === "CUSTOMER" && picked && (
           <div className="stack">
             <Field label="Your address" error={addressError}>

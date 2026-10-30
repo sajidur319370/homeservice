@@ -105,6 +105,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 .btn-ok { background: var(--ok); color: var(--surface); }
 .chip { font: inherit; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; }
 .chip-on { background: var(--primary); color: var(--primary-text); border-color: var(--primary); }
+.chip-static { cursor: default; border-style: dashed; color: var(--muted); background: transparent; } /* a time to look at, not to click */
 
 /* badges and alerts */
 .badge { font-size: 0.8rem; font-weight: 550; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
