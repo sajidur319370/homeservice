@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { api, errorMessage, useApi } from "../api";
 import { useAuth } from "../auth";
+import { useConfirm } from "../components/ConfirmToast";
 import { ErrorText, StatusBadge } from "../components/small";
 import { formatDateTime, formatTaka } from "../format";
 import type { Booking } from "../types";
 
 export default function Bookings() {
   const { user } = useAuth();
+  const confirm = useConfirm();
   const isCustomer = user?.role === "CUSTOMER";
   const { data, error, loading, reload } = useApi<{ bookings: Booking[] }>("/bookings/me");
   const [actionError, setActionError] = useState<string | null>(null);
@@ -76,8 +78,8 @@ export default function Bookings() {
                 <button
                   className="btn btn-ghost"
                   disabled={busy}
-                  onClick={() => {
-                    if (window.confirm("Cancel this booking?")) {
+                  onClick={async () => {
+                    if (await confirm({ message: "Cancel this booking?", yes: "Yes, cancel", no: "Keep it" })) {
                       void act(b.id, () => api(`/bookings/${b.id}/cancel`, { method: "PATCH" }));
                     }
                   }}

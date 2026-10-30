@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { api, errorMessage, useApi } from "../api";
+import { useConfirm } from "../components/ConfirmToast";
 import HoursEditor from "../components/HoursEditor";
 import { ErrorText, Field } from "../components/small";
 import { AREAS } from "../constants";
@@ -12,6 +13,7 @@ export default function ProviderDashboard() {
   const me = useApi<{ profile: ProviderMe }>("/providers/me");
   const mine = useApi<{ services: MyService[] }>("/services/mine");
   const categories = useApi<{ categories: Category[] }>("/categories");
+  const confirm = useConfirm();
 
   const [form, setForm] = useState(EMPTY);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +39,8 @@ export default function ProviderDashboard() {
   }
 
   async function remove(id: string) {
-    if (!window.confirm("Remove this service? Customers won't see it any more.")) return;
+    const ok = await confirm({ message: "Remove this service? Customers won't see it any more.", yes: "Yes, remove", no: "Keep it" });
+    if (!ok) return;
     setError(null);
     try {
       await api(`/services/${id}`, { method: "DELETE" });
