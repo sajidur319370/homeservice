@@ -1,0 +1,12 @@
+{
+  "name": "homeservice",
+  "private": true,
+  "description": "HomeService: book trusted home services in Dhaka. One repo, one deploy.",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "npm ci --prefix server && npm ci --include=dev --prefix client && npm run build --prefix client && npm run db:migrate --prefix server",
+    "start": "npm start --prefix server"
+  }
+}

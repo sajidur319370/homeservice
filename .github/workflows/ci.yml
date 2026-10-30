@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    # A throwaway Postgres just for this run.
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: homeservice_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/homeservice_test
+      JWT_SECRET: ci-only-secret-ci-only-secret-ci-only-secret
+      APP_URL: http://localhost:5173
+      PAYMENT_MODE: mock
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 26
+
+      - name: Server — install, type-check, migrate, seed, test
+        working-directory: server
+        run: |
+          npm ci
+          npm run typecheck
+          npm run test:setup
+          npm test
+
+      - name: Client — install, type-check and build
+        working-directory: client
+        run: |
+          npm ci
+          npm run build

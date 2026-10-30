@@ -1,0 +1,21 @@
+# Render Blueprint: Render → New → Blueprint → pick this repo.
+services:
+  - type: web
+    name: homeservice
+    runtime: node
+    region: singapore          # same region as the Neon database
+    plan: free
+    buildCommand: npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PAYMENT_MODE
+        value: mock
+      - key: JWT_SECRET
+        generateValue: true    # Render makes a long random secret for you
+      - key: DATABASE_URL
+        sync: false            # you paste the Neon "production" branch URL in the dashboard
+      - key: APP_URL
+        sync: false            # https://homeservice-xxxx.onrender.com (no / at the end)
