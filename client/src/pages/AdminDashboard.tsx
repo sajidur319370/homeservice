@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { api, errorMessage, useApi } from "../api";
+import { useConfirm } from "../components/ConfirmToast";
 import { useNotify } from "../components/Notify";
 import { ErrorText } from "../components/small";
 import { formatTaka } from "../format";
@@ -13,6 +14,7 @@ export default function AdminDashboard() {
   const [newCategory, setNewCategory] = useState("");
   const [error, setError] = useState<string | null>(null);
   const notify = useNotify();
+  const confirm = useConfirm();
 
   async function run(done: string, request: () => Promise<unknown>, ...toReload: { reload: () => void }[]) {
     setError(null);
@@ -25,8 +27,27 @@ export default function AdminDashboard() {
     }
   }
 
-  const setApproved = (id: string, value: boolean) =>
-    run(value ? "Provider approved" : "Provider suspended", () => api(`/admin/providers/${id}/approve`, { method: "PATCH", body: { approved: value } }), waiting, approved, stats);
+  async function setApproved(p: AdminProvider, value: boolean) {
+    const ok = await confirm(
+      value
+        ? { message: `Approve ${p.name}? Customers will see their services.`, yes: "Yes, approve", no: "Not now", tone: "ok" }
+        : { message: `Suspend ${p.name}? Their services will be hidden from customers.`, yes: "Yes, suspend", no: "Keep active" },
+    );
+    if (!ok) return;
+    await run(
+      value ? `${p.name} approved` : `${p.name} suspended`,
+      () => api(`/admin/providers/${p.id}/approve`, { method: "PATCH", body: { approved: value } }),
+      waiting,
+      approved,
+      stats,
+    );
+  }
+
+  async function removeCategory(c: Category) {
+    const ok = await confirm({ message: `Remove the category "${c.name}"?`, yes: "Yes, remove", no: "Keep it" });
+    if (!ok) return;
+    await run(`Category "${c.name}" removed`, () => api(`/categories/${c.id}`, { method: "DELETE" }), categories);
+  }
 
   function addCategory(e: FormEvent) {
     e.preventDefault();
@@ -59,8 +80,8 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      <ProviderList title="Providers waiting for approval" list={waiting.data?.providers} action="Approve" onAction={(id) => void setApproved(id, true)} />
-      <ProviderList title="Approved providers" list={approved.data?.providers} action="Suspend" onAction={(id) => void setApproved(id, false)} />
+      <ProviderList title="Providers waiting for approval" list={waiting.data?.providers} action="Approve" onAction={(p) => void setApproved(p, true)} />
+      <ProviderList title="Approved providers" list={approved.data?.providers} action="Suspend" onAction={(p) => void setApproved(p, false)} />
 
       <div className="card stack">
         <h2>Refunds to process</h2>
@@ -80,7 +101,7 @@ export default function AdminDashboard() {
         {categories.data?.categories.map((c) => (
           <div key={c.id} className="row between">
             <span>{c.name}</span>
-            <button className="btn btn-ghost" onClick={() => void run("Category removed", () => api(`/categories/${c.id}`, { method: "DELETE" }), categories)}>
+            <button className="btn btn-ghost" onClick={() => void removeCategory(c)}>
               Remove
             </button>
           </div>
@@ -96,7 +117,7 @@ export default function AdminDashboard() {
   );
 }
 
-type ListProps = { title: string; list?: AdminProvider[]; action: string; onAction: (id: string) => void };
+type ListProps = { title: string; list?: AdminProvider[]; action: string; onAction: (p: AdminProvider) => void };
 
 function ProviderList({ title, list, action, onAction }: ListProps) {
   return (
@@ -108,7 +129,7 @@ function ProviderList({ title, list, action, onAction }: ListProps) {
           <span>
             <strong>{p.name}</strong> <span className="muted">{p.email} · {p.area} · {p.serviceCount} services</span>
           </span>
-          <button className="btn btn-ghost" onClick={() => onAction(p.id)}>
+          <button className="btn btn-ghost" onClick={() => onAction(p)}>
             {action}
           </button>
         </div>

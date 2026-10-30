@@ -1,8 +1,9 @@
 // "Are you sure?" as a toast in the middle of the screen, instead of the browser's window.confirm.
 // Usage: const confirm = useConfirm();  if (await confirm({ message, yes: "Yes, cancel" })) { … }
+// tone "danger" (default, red) for things that remove or stop something, "ok" (green) for positive ones.
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 
-type Ask = { message: string; yes?: string; no?: string };
+type Ask = { message: string; yes?: string; no?: string; tone?: "danger" | "ok" };
 type Open = Ask & { answer: (ok: boolean) => void };
 
 const ConfirmContext = createContext<((ask: Ask) => Promise<boolean>) | null>(null);
@@ -34,7 +35,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
       {children}
       {open && (
         <div className="toast-backdrop" onClick={() => close(false)}>
-          <div className="toast" role="alertdialog" aria-modal="true" aria-labelledby="toast-message" onClick={(e) => e.stopPropagation()}>
+          <div className={`toast toast-${open.tone ?? "danger"}`} role="alertdialog" aria-modal="true" aria-labelledby="toast-message" onClick={(e) => e.stopPropagation()}>
             <p id="toast-message" className="toast-message">
               {open.message}
             </p>
@@ -42,7 +43,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
               <button ref={noButton} className="btn btn-ghost" onClick={() => close(false)}>
                 {open.no ?? "No"}
               </button>
-              <button className="btn btn-danger" onClick={() => close(true)}>
+              <button className={`btn ${open.tone === "ok" ? "btn-ok" : "btn-danger"}`} onClick={() => close(true)}>
                 {open.yes ?? "Yes"}
               </button>
             </div>
