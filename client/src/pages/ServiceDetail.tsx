@@ -14,7 +14,7 @@ export default function ServiceDetail() {
   const notify = useNotify();
   const days = next14Days();
 
-  const [date, setDate] = useState(days[0] ?? "");
+  const [date, setDate] = useState<string | null>(null); // nothing picked yet: times appear after a date
   const [picked, setPicked] = useState<string | null>(null);
   const [address, setAddress] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +23,7 @@ export default function ServiceDetail() {
   const { data, error: loadError } = useApi<{ service: ServiceCard }>(`/services/${id}`);
   const service = data?.service;
   const slots = useApi<{ slots: string[] }>(
-    service ? `/providers/${service.providerId}/slots?serviceId=${service.id}&date=${date}` : null,
+    service && date ? `/providers/${service.providerId}/slots?serviceId=${service.id}&date=${date}` : null,
   );
 
   // Reset the picked time in the click that changes the day, not in an effect.
@@ -70,7 +70,7 @@ export default function ServiceDetail() {
       </div>
 
       <div className="card stack">
-        <h2>Pick a time</h2>
+        <h2>Pick a date</h2>
         <div className="row wrap">
           {days.map((d) => (
             <button key={d} className={`chip ${d === date ? "chip-on" : ""}`} onClick={() => pickDay(d)}>
@@ -79,16 +79,21 @@ export default function ServiceDetail() {
           ))}
         </div>
 
-        <ErrorText>{slots.error}</ErrorText>
-        {slots.loading && <p className="muted">Loading free times…</p>}
-        {slots.data?.slots.length === 0 && <p className="muted">No free times on this day.</p>}
-        <div className="row wrap">
-          {slots.data?.slots.map((s) => (
-            <button key={s} className={`chip ${s === picked ? "chip-on" : ""}`} onClick={() => setPicked(s)}>
-              {formatTime(s)}
-            </button>
-          ))}
-        </div>
+        {date && (
+          <>
+            <h2>Pick a time</h2>
+            <ErrorText>{slots.error}</ErrorText>
+            {slots.loading && <p className="muted">Loading free times…</p>}
+            {slots.data?.slots.length === 0 && <p className="muted">No free times on this day. Try another date.</p>}
+            <div className="row wrap">
+              {slots.data?.slots.map((s) => (
+                <button key={s} className={`chip ${s === picked ? "chip-on" : ""}`} onClick={() => setPicked(s)}>
+                  {formatTime(s)}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
 
         {!user && (
           <p className="alert">
