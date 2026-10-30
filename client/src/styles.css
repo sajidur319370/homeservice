@@ -92,6 +92,8 @@ input, select, textarea {
 textarea { min-height: 80px; resize: vertical; }
 input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
 .field { display: flex; flex-direction: column; gap: 4px; font-size: 0.95rem; }
+.field-invalid :is(input, select, textarea) { border-color: var(--danger); }
+.field-error { color: var(--danger); font-size: 0.85rem; font-weight: 500; }
 .radio { display: flex; align-items: center; gap: 6px; }
 
 /* buttons */
@@ -138,9 +140,16 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 
 .hours-row input[type="time"] { width: 120px; }
 .hours-row .radio { width: 120px; }
+.hours-row { flex-wrap: wrap; }
+.hours-row .field-error { flex-basis: 100%; } /* its own line, under that day's times */
+/* "✓ Working hours saved": a filled green tick once saved, an empty circle while there are unsaved changes */
+.save-status { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+.save-status-on { color: var(--ok); font-weight: 550; }
+.save-icon { width: 20px; height: 20px; flex: none; display: grid; place-items: center; border-radius: 50%; border: 2px solid var(--border); font-size: 0.75rem; font-weight: 700; line-height: 1; }
+.save-status-on .save-icon { background: var(--ok); border-color: var(--ok); color: var(--surface); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .service-row { border-top: 1px solid var(--border); padding-top: 8px; }
 
 @media (max-width: 600px) {
-  .hours-row { flex-wrap: wrap; }
   .hero .row { flex-wrap: wrap; }
 }

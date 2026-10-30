@@ -3,7 +3,7 @@ import { api, errorMessage, useApi } from "../api";
 import { useAuth } from "../auth";
 import { useConfirm } from "../components/ConfirmToast";
 import { useNotify } from "../components/Notify";
-import { ErrorText, StatusBadge } from "../components/small";
+import { ErrorText, FieldError, StatusBadge } from "../components/small";
 import { formatDateTime, formatTaka } from "../format";
 import type { Booking } from "../types";
 
@@ -115,9 +115,14 @@ function ReviewForm({ bookingId, onDone }: { bookingId: string; onDone: () => vo
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [ratingError, setRatingError] = useState<string>();
   const notify = useNotify();
 
   async function submit() {
+    if (rating === 0) {
+      setRatingError("Choose 1 to 5 stars");
+      return;
+    }
     try {
       await api("/reviews", { method: "POST", body: { bookingId, rating, comment: comment.trim() || undefined } });
       notify("Thanks for your review");
@@ -132,14 +137,20 @@ function ReviewForm({ bookingId, onDone }: { bookingId: string; onDone: () => vo
       <strong>How was it?</strong>
       <div className="row">
         {[1, 2, 3, 4, 5].map((n) => (
-          <button key={n} className={`star ${n <= rating ? "star-on" : ""}`} onClick={() => setRating(n)} aria-label={`${n} stars`}>
+          <button key={n} className={`star ${n <= rating ? "star-on" : ""}`} onClick={() => {
+              setRating(n);
+              setRatingError(undefined);
+            }}
+            aria-label={`${n} stars`}
+          >
             ★
           </button>
         ))}
       </div>
+      <FieldError>{ratingError}</FieldError>
       <textarea placeholder="Optional comment" maxLength={500} value={comment} onChange={(e) => setComment(e.target.value)} />
       <ErrorText>{error}</ErrorText>
-      <button className="btn btn-primary" disabled={rating === 0} onClick={() => void submit()}>
+      <button className="btn btn-primary" onClick={() => void submit()}>
         Send review
       </button>
     </div>

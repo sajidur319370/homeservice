@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { api, errorMessage, useApi } from "../api";
 import { useConfirm } from "../components/ConfirmToast";
 import { useNotify } from "../components/Notify";
-import { ErrorText } from "../components/small";
+import { ErrorText, FieldError } from "../components/small";
 import { formatTaka } from "../format";
 import type { AdminProvider, AdminStats, Category } from "../types";
 
@@ -12,6 +12,7 @@ export default function AdminDashboard() {
   const approved = useApi<{ providers: AdminProvider[] }>("/admin/providers?approved=true");
   const categories = useApi<{ categories: Category[] }>("/categories");
   const [newCategory, setNewCategory] = useState("");
+  const [categoryError, setCategoryError] = useState<string>();
   const [error, setError] = useState<string | null>(null);
   const notify = useNotify();
   const confirm = useConfirm();
@@ -51,6 +52,10 @@ export default function AdminDashboard() {
 
   function addCategory(e: FormEvent) {
     e.preventDefault();
+    const name = newCategory.trim();
+    const problem = !name ? "Category name is required" : name.length < 2 ? "Name must be at least 2 characters" : undefined;
+    setCategoryError(problem);
+    if (problem) return;
     void run("Category added", () => api("/categories", { method: "POST", body: { name: newCategory } }), categories).then(() => setNewCategory(""));
   }
 
@@ -106,12 +111,20 @@ export default function AdminDashboard() {
             </button>
           </div>
         ))}
-        <form className="row" onSubmit={addCategory}>
-          <input className="grow" placeholder="New category, e.g. Painter" value={newCategory} onChange={(e) => setNewCategory(e.target.value)} />
-          <button className="btn btn-primary" disabled={newCategory.trim().length < 2}>
-            Add
-          </button>
+        <form className="row" onSubmit={addCategory} noValidate>
+          <input
+            className="grow"
+            placeholder="New category, e.g. Painter"
+            aria-invalid={Boolean(categoryError)}
+            value={newCategory}
+            onChange={(e) => {
+              setNewCategory(e.target.value);
+              setCategoryError(undefined);
+            }}
+          />
+          <button className="btn btn-primary">Add</button>
         </form>
+        <FieldError>{categoryError}</FieldError>
       </div>
     </div>
   );

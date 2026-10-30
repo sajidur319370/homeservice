@@ -1,10 +1,10 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router";
-import { errorMessage } from "../api";
 import { useAuth, type RegisterInput } from "../auth";
 import { useNotify } from "../components/Notify";
 import { ErrorText, Field } from "../components/small";
 import { AREAS, HOME_BY_ROLE } from "../constants";
+import { minLength, only, useFieldErrors, validEmail } from "../fieldErrors";
 
 export default function Register() {
   const { register } = useAuth();
@@ -13,14 +13,28 @@ export default function Register() {
   const [form, setForm] = useState<RegisterInput>({ name: "", email: "", password: "", phone: "", role: "CUSTOMER", area: AREAS[0] });
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const fields = useFieldErrors<keyof RegisterInput>();
 
-  // One change handler for every input: update just that field.
-  const set = <K extends keyof RegisterInput>(key: K, value: RegisterInput[K]) => setForm((f) => ({ ...f, [key]: value }));
+  // One change handler for every input: update just that field and hide its red message.
+  const set = <K extends keyof RegisterInput>(key: K, value: RegisterInput[K]) => {
+    setForm((f) => ({ ...f, [key]: value }));
+    fields.clear(key);
+  };
+
+  function validate() {
+    return only({
+      name: minLength(form.name, 2, form.name.trim() ? "Name must be at least 2 characters" : "Name is required"),
+      email: validEmail(form.email),
+      password: form.password ? minLength(form.password, 8, "Password must be at least 8 characters") : "Password is required",
+      phone: (form.phone ?? "").trim().length > 20 ? "Phone number is too long" : undefined,
+    });
+  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    setBusy(true);
     setError(null);
+    if (!fields.check(validate())) return;
+    setBusy(true);
     try {
       const body: RegisterInput = { ...form, phone: form.phone || undefined };
       if (body.role === "CUSTOMER") delete body.area;
@@ -28,7 +42,7 @@ export default function Register() {
       notify(`Account created. Welcome, ${user.name.split(" ")[0]}`);
       navigate(HOME_BY_ROLE[user.role], { replace: true });
     } catch (err) {
-      setError(errorMessage(err));
+      setError(fields.fromServer(err));
     } finally {
       setBusy(false);
     }
@@ -37,7 +51,7 @@ export default function Register() {
   return (
     <div className="card narrow">
       <h1>Create an account</h1>
-      <form onSubmit={onSubmit} className="stack">
+      <form onSubmit={onSubmit} className="stack" noValidate>
         <div className="row">
           {(["CUSTOMER", "PROVIDER"] as const).map((role) => (
             <label key={role} className="radio">
@@ -46,20 +60,20 @@ export default function Register() {
             </label>
           ))}
         </div>
-        <Field label="Full name">
-          <input value={form.name} onChange={(e) => set("name", e.target.value)} required minLength={2} />
+        <Field label="Full name" error={fields.errors.name}>
+          <input value={form.name} onChange={(e) => set("name", e.target.value)} autoComplete="name" />
         </Field>
-        <Field label="Email">
-          <input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} required />
+        <Field label="Email" error={fields.errors.email}>
+          <input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} autoComplete="email" />
         </Field>
-        <Field label="Password (8+ characters)">
-          <input type="password" value={form.password} onChange={(e) => set("password", e.target.value)} required minLength={8} />
+        <Field label="Password (8+ characters)" error={fields.errors.password}>
+          <input type="password" value={form.password} onChange={(e) => set("password", e.target.value)} autoComplete="new-password" />
         </Field>
-        <Field label="Phone (optional)">
+        <Field label="Phone (optional)" error={fields.errors.phone}>
           <input value={form.phone} onChange={(e) => set("phone", e.target.value)} />
         </Field>
         {form.role === "PROVIDER" && (
-          <Field label="Your area">
+          <Field label="Your area" error={fields.errors.area}>
             <select value={form.area} onChange={(e) => set("area", e.target.value)}>
               {AREAS.map((a) => (
                 <option key={a}>{a}</option>

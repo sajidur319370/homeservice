@@ -1,10 +1,10 @@
 import { useState, type FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
-import { errorMessage } from "../api";
 import { useAuth } from "../auth";
 import { useNotify } from "../components/Notify";
 import { ErrorText, Field } from "../components/small";
 import { HOME_BY_ROLE } from "../constants";
+import { only, required, useFieldErrors, validEmail } from "../fieldErrors";
 
 const DEMO = [
   { label: "Customer", email: "customer@homeservice.dev" },
@@ -23,6 +23,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const fields = useFieldErrors<"email" | "password">();
 
   async function submit(emailValue: string, passwordValue: string) {
     setBusy(true);
@@ -32,7 +33,7 @@ export default function Login() {
       notify(`Welcome back, ${user.name.split(" ")[0]}`);
       navigate(from ?? HOME_BY_ROLE[user.role], { replace: true });
     } catch (err) {
-      setError(errorMessage(err));
+      setError(fields.fromServer(err));
     } finally {
       setBusy(false);
     }
@@ -40,18 +41,37 @@ export default function Login() {
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
-    void submit(email, password);
+    const ok = fields.check(
+      only({ email: validEmail(email), password: required(password, "Password is required") }),
+    );
+    if (ok) void submit(email, password);
   }
 
   return (
     <div className="card narrow">
       <h1>Log in</h1>
-      <form onSubmit={onSubmit} className="stack">
-        <Field label="Email">
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
+      <form onSubmit={onSubmit} className="stack" noValidate>
+        <Field label="Email" error={fields.errors.email}>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              fields.clear("email");
+            }}
+            autoComplete="email"
+          />
         </Field>
-        <Field label="Password">
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" />
+        <Field label="Password" error={fields.errors.password}>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              fields.clear("password");
+            }}
+            autoComplete="current-password"
+          />
         </Field>
         <ErrorText>{error}</ErrorText>
         <button className="btn btn-primary" disabled={busy}>

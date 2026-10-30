@@ -17,6 +17,7 @@ export default function ServiceDetail() {
   const [date, setDate] = useState<string | null>(null); // nothing picked yet: times appear after a date
   const [picked, setPicked] = useState<string | null>(null);
   const [address, setAddress] = useState("");
+  const [addressError, setAddressError] = useState<string>();
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -34,6 +35,10 @@ export default function ServiceDetail() {
 
   async function book() {
     if (!service || !picked) return;
+    const a = address.trim();
+    const problem = !a ? "Address is required" : a.length < 5 ? "Please enter your full address (house, road, area)" : undefined;
+    setAddressError(problem);
+    if (problem) return;
     setBusy(true);
     setError(null);
     try {
@@ -106,11 +111,18 @@ export default function ServiceDetail() {
         {user && user.role !== "CUSTOMER" && <p className="alert">Only customers can book services.</p>}
         {user?.role === "CUSTOMER" && picked && (
           <div className="stack">
-            <Field label="Your address">
-              <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="House, road, area" />
+            <Field label="Your address" error={addressError}>
+              <input
+                value={address}
+                onChange={(e) => {
+                  setAddress(e.target.value);
+                  setAddressError(undefined);
+                }}
+                placeholder="House, road, area"
+              />
             </Field>
             <ErrorText>{error}</ErrorText>
-            <button className="btn btn-primary" disabled={busy || address.trim().length < 5} onClick={() => void book()}>
+            <button className="btn btn-primary" disabled={busy} onClick={() => void book()}>
               {busy ? "Booking…" : `Book ${formatDateTime(picked)} · ${formatTaka(service.price)}`}
             </button>
             <p className="muted">The time is held for you for 15 minutes while you pay.</p>

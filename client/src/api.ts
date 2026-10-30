@@ -3,15 +3,17 @@ import { useEffect, useState } from "react";
 // fetch + JSON + token + errors in one place: everything axios did for us, in ~30 lines.
 export class ApiError extends Error {
   readonly status: number;
+  readonly fields: Record<string, string>; // zod 400: field name → its message, shown under that field
 
-  constructor(status: number, message: string) {
+  constructor(status: number, message: string, fields: Record<string, string> = {}) {
     super(message);
     this.status = status;
+    this.fields = fields;
   }
 }
 
 type Options = { method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE"; body?: unknown };
-type ErrorBody = { error?: string; details?: { message: string }[] };
+type ErrorBody = { error?: string; details?: { path: string; message: string }[] };
 
 export async function api<T>(path: string, { method = "GET", body }: Options = {}): Promise<T> {
   const headers: Record<string, string> = {};
@@ -31,7 +33,9 @@ export async function api<T>(path: string, { method = "GET", body }: Options = {
     // A zod 400 says "Invalid input" plus one message per wrong field: show those.
     const err = data as ErrorBody;
     const message = err.details?.length ? err.details.map((d) => d.message).join("\n") : err.error;
-    throw new ApiError(res.status, message ?? `Request failed (${res.status})`);
+    const fields: Record<string, string> = {};
+    for (const d of err.details ?? []) fields[d.path] ??= d.message; // first message per field
+    throw new ApiError(res.status, message ?? `Request failed (${res.status})`, fields);
   }
   return data as T;
 }

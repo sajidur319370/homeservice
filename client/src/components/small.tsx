@@ -24,13 +24,20 @@ export function StatusBadge({ status }: { status: BookingStatus }) {
 }
 
 // <label> + input + error message, so every form looks the same.
-export function Field({ label, children }: { label: string; children: ReactNode }) {
+export function Field({ label, error, children }: { label: string; error?: string; children: ReactNode }) {
   return (
-    <label className="field">
+    <label className={`field ${error ? "field-invalid" : ""}`}>
       <span>{label}</span>
       {children}
+      <FieldError>{error}</FieldError>
     </label>
   );
+}
+
+// The red text under one field, for inputs that aren't inside a <Field>.
+export function FieldError({ children }: { children?: string }) {
+  if (!children) return null;
+  return <span className="field-error">{children}</span>;
 }
 
 export function ErrorText({ children }: { children?: string | null }) {

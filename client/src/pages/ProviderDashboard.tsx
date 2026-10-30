@@ -5,6 +5,7 @@ import HoursEditor from "../components/HoursEditor";
 import { useNotify } from "../components/Notify";
 import { ErrorText, Field } from "../components/small";
 import { AREAS } from "../constants";
+import { minLength, only, required, useFieldErrors } from "../fieldErrors";
 import { formatTaka } from "../format";
 import type { Category, MyService, ProviderMe } from "../types";
 
@@ -20,11 +21,35 @@ export default function ProviderDashboard() {
   const [form, setForm] = useState(EMPTY);
   const [error, setError] = useState<string | null>(null);
 
-  const set = (key: keyof typeof EMPTY, value: string) => setForm((f) => ({ ...f, [key]: value }));
+  const fields = useFieldErrors<keyof typeof EMPTY>();
+
+  const set = (key: keyof typeof EMPTY, value: string) => {
+    setForm((f) => ({ ...f, [key]: value }));
+    fields.clear(key);
+  };
+
+  function validate() {
+    const price = Number(form.price);
+    return only({
+      title: form.title.trim() ? minLength(form.title, 3, "Title must be at least 3 characters") : "Title is required",
+      description: form.description.trim()
+        ? minLength(form.description, 10, "Description must be at least 10 characters")
+        : "Description is required",
+      categoryId: required(form.categoryId, "Choose a category"),
+      price: !form.price.trim()
+        ? "Price is required"
+        : !Number.isInteger(price) || price < 50 || price > 100_000
+          ? "Price must be a whole number from ৳50 to ৳1,00,000"
+          : undefined,
+      durationMin: undefined,
+      area: required(form.area, "Choose an area"),
+    });
+  }
 
   async function addService(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    if (!fields.check(validate())) return;
     try {
       await api("/services", {
         method: "POST",
@@ -34,7 +59,7 @@ export default function ProviderDashboard() {
       notify("Service added");
       mine.reload();
     } catch (err) {
-      setError(errorMessage(err));
+      setError(fields.fromServer(err));
     }
   }
 
@@ -86,17 +111,17 @@ export default function ProviderDashboard() {
         ))}
       </div>
 
-      <form className="card stack" onSubmit={addService}>
+      <form className="card stack" onSubmit={addService} noValidate>
         <h2>Add a service</h2>
-        <Field label="Title">
-          <input value={form.title} onChange={(e) => set("title", e.target.value)} required />
+        <Field label="Title" error={fields.errors.title}>
+          <input value={form.title} onChange={(e) => set("title", e.target.value)} />
         </Field>
-        <Field label="Description">
-          <textarea value={form.description} onChange={(e) => set("description", e.target.value)} required />
+        <Field label="Description" error={fields.errors.description}>
+          <textarea value={form.description} onChange={(e) => set("description", e.target.value)} />
         </Field>
         <div className="row wrap">
-          <Field label="Category">
-            <select value={form.categoryId} onChange={(e) => set("categoryId", e.target.value)} required>
+          <Field label="Category" error={fields.errors.categoryId}>
+            <select value={form.categoryId} onChange={(e) => set("categoryId", e.target.value)}>
               <option value="">Choose…</option>
               {categories.data?.categories.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -105,10 +130,10 @@ export default function ProviderDashboard() {
               ))}
             </select>
           </Field>
-          <Field label="Price (৳)">
+          <Field label="Price (৳)" error={fields.errors.price}>
             <input type="number" min={50} step={50} value={form.price} onChange={(e) => set("price", e.target.value)} />
           </Field>
-          <Field label="Duration">
+          <Field label="Duration" error={fields.errors.durationMin}>
             <select value={form.durationMin} onChange={(e) => set("durationMin", e.target.value)}>
               {[30, 60, 90, 120, 180, 240].map((m) => (
                 <option key={m} value={m}>
@@ -117,7 +142,7 @@ export default function ProviderDashboard() {
               ))}
             </select>
           </Field>
-          <Field label="Area">
+          <Field label="Area" error={fields.errors.area}>
             <select value={form.area} onChange={(e) => set("area", e.target.value)}>
               {AREAS.map((a) => (
                 <option key={a}>{a}</option>
