@@ -1,0 +1,125 @@
+/* One small stylesheet instead of Tailwind + a component library. */
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --text: #1c2430;
+  --muted: #5f6b7a;
+  --border: #dde2e8;
+  --primary: #0f766e;
+  --primary-text: #ffffff;
+  --danger: #b42318;
+  --danger-bg: #fdecea;
+  --ok-bg: #e7f6ee;
+  --warn-bg: #fff6e0;
+  --radius: 10px;
+  color-scheme: light; /* the browser's own inputs, scrollbars, date pickers match */
+  font-family: "Inter Variable", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-feature-settings: "cv11", "ss01"; /* Inter's cleaner single-storey "a" and open digits */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  color: var(--text);
+  background: var(--bg);
+}
+
+/* Dark theme: public/theme.js sets <html data-theme="dark"> before React starts,
+   and the navbar's ThemeToggle switches it. Only the colour variables change. */
+:root[data-theme="dark"] {
+  --bg: #12161c;
+  --surface: #1b212a;
+  --text: #e6eaef;
+  --muted: #9aa5b3;
+  --border: #2d3540;
+  --primary: #2dd4bf;
+  --primary-text: #062b27;
+  --danger: #ff8a80;
+  --danger-bg: #3a1d1b;
+  --ok-bg: #16312a;
+  --warn-bg: #3a3019;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; line-height: 1.5; }
+h1, h2, h3 { margin: 0; line-height: 1.25; font-weight: 650; letter-spacing: -0.02em; }
+h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.03em; }
+h2 { font-size: 1.25rem; }
+h3 { font-size: 1.05rem; letter-spacing: -0.01em; }
+strong { font-weight: 650; font-variant-numeric: tabular-nums; } /* prices line up */
+p { margin: 0; }
+a { color: var(--primary); }
+
+.container { max-width: 960px; margin: 0 auto; padding: 24px 16px; }
+
+/* layout helpers */
+.stack { display: flex; flex-direction: column; gap: 16px; }
+.row { display: flex; align-items: center; gap: 10px; }
+.wrap { flex-wrap: wrap; }
+.between { justify-content: space-between; }
+.center { justify-content: center; }
+.grow { flex: 1; min-width: 0; }
+.muted { color: var(--muted); }
+.clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+
+/* navbar */
+.navbar { background: var(--surface); border-bottom: 1px solid var(--border); }
+.navbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding-top: 12px; padding-bottom: 12px; }
+.navbar nav { flex-wrap: wrap; }
+.navbar nav a { text-decoration: none; color: var(--text); }
+.navbar nav a.active { color: var(--primary); font-weight: 600; }
+.theme-toggle { padding: 6px 10px; line-height: 1; }
+.brand { font-weight: 750; font-size: 1.2rem; letter-spacing: -0.03em; text-decoration: none; color: var(--text); }
+
+/* cards */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+.card-link { color: inherit; text-decoration: none; transition: border-color 0.15s; }
+.card-link:hover { border-color: var(--primary); }
+.narrow { max-width: 440px; margin: 0 auto; }
+.hero { display: flex; flex-direction: column; gap: 10px; }
+.tiles { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+.tile strong { font-size: 1.4rem; }
+
+/* form controls */
+input, select, textarea {
+  font: inherit; color: var(--text); background: var(--surface);
+  border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px;
+}
+textarea { min-height: 80px; resize: vertical; }
+input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+.field { display: flex; flex-direction: column; gap: 4px; font-size: 0.95rem; }
+.radio { display: flex; align-items: center; gap: 6px; }
+
+/* buttons */
+.btn { font: inherit; font-weight: 550; border-radius: 8px; padding: 8px 14px; border: 1px solid transparent; cursor: pointer; text-decoration: none; text-align: center; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary { background: var(--primary); color: var(--primary-text); }
+.btn-ghost { background: transparent; color: var(--text); border-color: var(--border); }
+.chip { font: inherit; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; }
+.chip-on { background: var(--primary); color: var(--primary-text); border-color: var(--primary); }
+
+/* badges and alerts */
+.badge { font-size: 0.8rem; font-weight: 550; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.badge-teal { background: var(--ok-bg); color: var(--primary); }
+.badge-green { background: var(--ok-bg); color: var(--text); }
+.badge-amber { background: var(--warn-bg); color: var(--text); }
+.badge-grey { background: var(--border); color: var(--muted); }
+.alert { padding: 10px 12px; border-radius: 8px; background: var(--warn-bg); white-space: pre-line; }
+.alert-error { background: var(--danger-bg); color: var(--danger); }
+.alert-ok { background: var(--ok-bg); }
+
+/* reviews */
+.stars { color: #d97706; white-space: nowrap; }
+.review { border-top: 1px solid var(--border); padding-top: 8px; }
+.review-form { border-top: 1px solid var(--border); padding-top: 12px; }
+.star { font-size: 1.6rem; background: none; border: none; color: var(--border); cursor: pointer; padding: 0 2px; }
+.star-on { color: #d97706; }
+
+.hours-row input[type="time"] { width: 120px; }
+.hours-row .radio { width: 120px; }
+.service-row { border-top: 1px solid var(--border); padding-top: 8px; }
+
+@media (max-width: 600px) {
+  .hours-row { flex-wrap: wrap; }
+  .hero .row { flex-wrap: wrap; }
+}

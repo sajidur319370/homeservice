@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    // Vite turns TSX into JavaScript; tsc only CHECKS types.
+    "noEmit": true,
+    "target": "es2022",
+    "lib": ["es2023", "dom", "dom.iterable"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "types": ["vite/client"],
+
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "skipLibCheck": true
+  },
+  "include": ["src", "vite.config.ts"]
+}
