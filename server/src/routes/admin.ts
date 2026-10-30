@@ -51,6 +51,18 @@ router.get("/providers", async (req, res) => {
   res.json({ providers });
 });
 
+// Categories + how many services use each, so the page can say "can't remove" before trying.
+// Counts removed (inactive) services too: they still point at the category (same rule as DELETE /categories/:id).
+router.get("/categories", async (_req, res) => {
+  const categories = await query(
+    `SELECT c.id, c.name, c.slug,
+            (SELECT count(*)::int FROM services s WHERE s.category_id = c.id) AS "serviceCount"
+     FROM categories c
+     ORDER BY c.name`,
+  );
+  res.json({ categories });
+});
+
 router.patch("/providers/:id/approve", async (req, res) => {
   const { approved } = z.object({ approved: z.boolean() }).parse(req.body);
   const provider = await queryOne(

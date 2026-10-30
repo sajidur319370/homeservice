@@ -70,6 +70,8 @@ export type AdminProvider = {
   serviceCount: number;
 };
 
+export type AdminCategory = Category & { serviceCount: number }; // includes removed services
+
 export type AdminStats = {
   usersByRole: Partial<Record<Role, number>>;
   bookingsByStatus: Partial<Record<BookingStatus, number>>;

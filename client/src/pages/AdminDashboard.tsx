@@ -4,13 +4,13 @@ import { useConfirm } from "../components/ConfirmToast";
 import { useNotify } from "../components/Notify";
 import { ErrorText, FieldError } from "../components/small";
 import { formatTaka } from "../format";
-import type { AdminProvider, AdminStats, Category } from "../types";
+import type { AdminCategory, AdminProvider, AdminStats } from "../types";
 
 export default function AdminDashboard() {
   const stats = useApi<AdminStats>("/admin/stats");
   const waiting = useApi<{ providers: AdminProvider[] }>("/admin/providers?approved=false");
   const approved = useApi<{ providers: AdminProvider[] }>("/admin/providers?approved=true");
-  const categories = useApi<{ categories: Category[] }>("/categories");
+  const categories = useApi<{ categories: AdminCategory[] }>("/admin/categories");
   const [newCategory, setNewCategory] = useState("");
   const [categoryError, setCategoryError] = useState<string>();
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +44,12 @@ export default function AdminDashboard() {
     );
   }
 
-  async function removeCategory(c: Category) {
+  async function removeCategory(c: AdminCategory) {
+    // In use: say so straight away (same words as the server's 409), no "Are you sure?" first.
+    if (c.serviceCount > 0) {
+      notify(`Can't remove: ${c.serviceCount} service(s) use this category`, "error");
+      return;
+    }
     const ok = await confirm({ message: `Remove the category "${c.name}"?`, yes: "Yes, remove", no: "Keep it" });
     if (!ok) return;
     await run(`Category "${c.name}" removed`, () => api(`/categories/${c.id}`, { method: "DELETE" }), categories);

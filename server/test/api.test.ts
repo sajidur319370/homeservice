@@ -146,4 +146,18 @@ describe("HomeService API", { skip: !hasDb && "no DATABASE_URL (see .env.test)" 
     assert.equal(card.body.services[0].ratingAvg, 4.5); // (5 + 4) / 2
     assert.equal(card.body.services[0].ratingCount, 2);
   });
+
+  test("admin categories carry a service count; a used category can't be removed", async () => {
+    const admin = await login("admin@homeservice.dev");
+    assert.equal((await call("GET", "/admin/categories", { token: tokens.customer })).status, 403);
+
+    const res = await call("GET", "/admin/categories", { token: admin });
+    assert.equal(res.status, 200);
+    const electrician = res.body.categories.find((c: { name: string }) => c.name === "Electrician");
+    assert.equal(electrician.serviceCount, 3); // the unapproved provider's service counts too
+
+    const del = await call("DELETE", `/categories/${electrician.id}`, { token: admin });
+    assert.equal(del.status, 409);
+    assert.equal(del.body.error, "Can't remove: 3 service(s) use this category");
+  });
 });
