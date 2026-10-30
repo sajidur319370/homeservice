@@ -3,6 +3,7 @@ import { api, errorMessage } from "../api";
 import { WEEKDAYS } from "../constants";
 import { hhmmToMinutes, minutesToHHMM } from "../format";
 import type { DayHours } from "../types";
+import { useNotify } from "./Notify";
 import { ErrorText } from "./small";
 
 type Row = { on: boolean; start: string; end: string };
@@ -17,21 +18,20 @@ export default function HoursEditor({ initial }: { initial: DayHours[] }) {
         : { on: false, start: "09:00", end: "18:00" };
     }),
   );
-  const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const notify = useNotify();
 
   const change = (i: number, patch: Partial<Row>) =>
     setRows((all) => all.map((row, j) => (j === i ? { ...row, ...patch } : row)));
 
   async function save() {
     setError(null);
-    setMessage(null);
     const days = rows.flatMap((row, weekday) =>
       row.on ? [{ weekday, startMin: hhmmToMinutes(row.start), endMin: hhmmToMinutes(row.end) }] : [],
     );
     try {
       await api("/providers/me/availability", { method: "PUT", body: { days } });
-      setMessage("✅ Working hours saved");
+      notify("Working hours saved");
     } catch (err) {
       setError(errorMessage(err));
     }
@@ -52,7 +52,6 @@ export default function HoursEditor({ initial }: { initial: DayHours[] }) {
         </div>
       ))}
       <ErrorText>{error}</ErrorText>
-      {message && <p className="alert alert-ok">{message}</p>}
       <button className="btn btn-primary" onClick={() => void save()}>
         Save hours
       </button>

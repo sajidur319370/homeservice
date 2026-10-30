@@ -2,11 +2,13 @@ import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router";
 import { errorMessage } from "../api";
 import { useAuth, type RegisterInput } from "../auth";
+import { useNotify } from "../components/Notify";
 import { ErrorText, Field } from "../components/small";
 import { AREAS, HOME_BY_ROLE } from "../constants";
 
 export default function Register() {
   const { register } = useAuth();
+  const notify = useNotify();
   const navigate = useNavigate();
   const [form, setForm] = useState<RegisterInput>({ name: "", email: "", password: "", phone: "", role: "CUSTOMER", area: AREAS[0] });
   const [error, setError] = useState<string | null>(null);
@@ -23,6 +25,7 @@ export default function Register() {
       const body: RegisterInput = { ...form, phone: form.phone || undefined };
       if (body.role === "CUSTOMER") delete body.area;
       const user = await register(body);
+      notify(`Account created. Welcome, ${user.name.split(" ")[0]}`);
       navigate(HOME_BY_ROLE[user.role], { replace: true });
     } catch (err) {
       setError(errorMessage(err));

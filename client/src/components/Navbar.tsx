@@ -1,10 +1,12 @@
 import { Link, NavLink, useNavigate } from "react-router";
 import { useAuth } from "../auth";
+import { useNotify } from "./Notify";
 import ThemeToggle from "./ThemeToggle";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const notify = useNotify();
 
   return (
     <header className="navbar">
@@ -25,6 +27,7 @@ export default function Navbar() {
               onClick={() => {
                 logout();
                 navigate("/");
+                notify("You are logged out");
               }}
             >
               Log out ({user.name.split(" ")[0]})

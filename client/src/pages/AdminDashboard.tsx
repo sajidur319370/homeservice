@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { api, errorMessage, useApi } from "../api";
+import { useNotify } from "../components/Notify";
 import { ErrorText } from "../components/small";
 import { formatTaka } from "../format";
 import type { AdminProvider, AdminStats, Category } from "../types";
@@ -11,11 +12,13 @@ export default function AdminDashboard() {
   const categories = useApi<{ categories: Category[] }>("/categories");
   const [newCategory, setNewCategory] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const notify = useNotify();
 
-  async function run(request: () => Promise<unknown>, ...toReload: { reload: () => void }[]) {
+  async function run(done: string, request: () => Promise<unknown>, ...toReload: { reload: () => void }[]) {
     setError(null);
     try {
       await request();
+      notify(done);
       toReload.forEach((r) => r.reload());
     } catch (err) {
       setError(errorMessage(err));
@@ -23,11 +26,11 @@ export default function AdminDashboard() {
   }
 
   const setApproved = (id: string, value: boolean) =>
-    run(() => api(`/admin/providers/${id}/approve`, { method: "PATCH", body: { approved: value } }), waiting, approved, stats);
+    run(value ? "Provider approved" : "Provider suspended", () => api(`/admin/providers/${id}/approve`, { method: "PATCH", body: { approved: value } }), waiting, approved, stats);
 
   function addCategory(e: FormEvent) {
     e.preventDefault();
-    void run(() => api("/categories", { method: "POST", body: { name: newCategory } }), categories).then(() => setNewCategory(""));
+    void run("Category added", () => api("/categories", { method: "POST", body: { name: newCategory } }), categories).then(() => setNewCategory(""));
   }
 
   const s = stats.data;
@@ -77,7 +80,7 @@ export default function AdminDashboard() {
         {categories.data?.categories.map((c) => (
           <div key={c.id} className="row between">
             <span>{c.name}</span>
-            <button className="btn btn-ghost" onClick={() => void run(() => api(`/categories/${c.id}`, { method: "DELETE" }), categories)}>
+            <button className="btn btn-ghost" onClick={() => void run("Category removed", () => api(`/categories/${c.id}`, { method: "DELETE" }), categories)}>
               Remove
             </button>
           </div>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { api, errorMessage, useApi } from "../api";
 import { useAuth } from "../auth";
 import { useConfirm } from "../components/ConfirmToast";
+import { useNotify } from "../components/Notify";
 import { ErrorText, StatusBadge } from "../components/small";
 import { formatDateTime, formatTaka } from "../format";
 import type { Booking } from "../types";
@@ -9,17 +10,19 @@ import type { Booking } from "../types";
 export default function Bookings() {
   const { user } = useAuth();
   const confirm = useConfirm();
+  const notify = useNotify();
   const isCustomer = user?.role === "CUSTOMER";
   const { data, error, loading, reload } = useApi<{ bookings: Booking[] }>("/bookings/me");
   const [actionError, setActionError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
-  // Run one button's request, then reload the list.
-  async function act(id: string, request: () => Promise<unknown>) {
+  // Run one button's request, say it worked, then reload the list.
+  async function act(id: string, done: string, request: () => Promise<unknown>) {
     setBusyId(id);
     setActionError(null);
     try {
       await request();
+      notify(done);
       reload();
     } catch (err) {
       setActionError(errorMessage(err));
@@ -80,7 +83,7 @@ export default function Bookings() {
                   disabled={busy}
                   onClick={async () => {
                     if (await confirm({ message: "Cancel this booking?", yes: "Yes, cancel", no: "Keep it" })) {
-                      void act(b.id, () => api(`/bookings/${b.id}/cancel`, { method: "PATCH" }));
+                      void act(b.id, "Booking cancelled", () => api(`/bookings/${b.id}/cancel`, { method: "PATCH" }));
                     }
                   }}
                 >
@@ -91,7 +94,7 @@ export default function Bookings() {
                 <button
                   className="btn btn-primary"
                   disabled={busy}
-                  onClick={() => void act(b.id, () => api(`/bookings/${b.id}/complete`, { method: "PATCH" }))}
+                  onClick={() => void act(b.id, "Job marked as completed", () => api(`/bookings/${b.id}/complete`, { method: "PATCH" }))}
                 >
                   Mark complete
                 </button>
@@ -112,10 +115,12 @@ function ReviewForm({ bookingId, onDone }: { bookingId: string; onDone: () => vo
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const notify = useNotify();
 
   async function submit() {
     try {
       await api("/reviews", { method: "POST", body: { bookingId, rating, comment: comment.trim() || undefined } });
+      notify("Thanks for your review");
       onDone();
     } catch (err) {
       setError(errorMessage(err));

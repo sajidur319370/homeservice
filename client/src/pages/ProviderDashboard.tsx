@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { api, errorMessage, useApi } from "../api";
 import { useConfirm } from "../components/ConfirmToast";
 import HoursEditor from "../components/HoursEditor";
+import { useNotify } from "../components/Notify";
 import { ErrorText, Field } from "../components/small";
 import { AREAS } from "../constants";
 import { formatTaka } from "../format";
@@ -14,24 +15,23 @@ export default function ProviderDashboard() {
   const mine = useApi<{ services: MyService[] }>("/services/mine");
   const categories = useApi<{ categories: Category[] }>("/categories");
   const confirm = useConfirm();
+  const notify = useNotify();
 
   const [form, setForm] = useState(EMPTY);
   const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
 
   const set = (key: keyof typeof EMPTY, value: string) => setForm((f) => ({ ...f, [key]: value }));
 
   async function addService(e: FormEvent) {
     e.preventDefault();
     setError(null);
-    setMessage(null);
     try {
       await api("/services", {
         method: "POST",
         body: { ...form, price: Number(form.price), durationMin: Number(form.durationMin) },
       });
       setForm(EMPTY);
-      setMessage("✅ Service added");
+      notify("Service added");
       mine.reload();
     } catch (err) {
       setError(errorMessage(err));
@@ -44,6 +44,7 @@ export default function ProviderDashboard() {
     setError(null);
     try {
       await api(`/services/${id}`, { method: "DELETE" });
+      notify("Service removed");
       mine.reload();
     } catch (err) {
       setError(errorMessage(err));
@@ -125,7 +126,6 @@ export default function ProviderDashboard() {
           </Field>
         </div>
         <ErrorText>{error}</ErrorText>
-        {message && <p className="alert alert-ok">{message}</p>}
         <button className="btn btn-primary">Add service</button>
       </form>
     </div>

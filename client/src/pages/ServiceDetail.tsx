@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { api, ApiError, errorMessage, useApi } from "../api";
 import { useAuth } from "../auth";
+import { useNotify } from "../components/Notify";
 import { ErrorText, Field, Stars } from "../components/small";
 import { dayLabel, formatDateTime, formatTaka, formatTime, next14Days } from "../format";
 import type { Page, Review, ServiceCard } from "../types";
@@ -10,6 +11,7 @@ export default function ServiceDetail() {
   const { id } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const notify = useNotify();
   const days = next14Days();
 
   const [date, setDate] = useState(days[0] ?? "");
@@ -36,6 +38,7 @@ export default function ServiceDetail() {
     setError(null);
     try {
       await api("/bookings", { method: "POST", body: { serviceId: service.id, startAt: picked, address } });
+      notify("Booked! Pay within 15 minutes to confirm it");
       navigate("/bookings");
     } catch (err) {
       setError(errorMessage(err));

@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { errorMessage } from "../api";
 import { useAuth } from "../auth";
+import { useNotify } from "../components/Notify";
 import { ErrorText, Field } from "../components/small";
 import { HOME_BY_ROLE } from "../constants";
 
@@ -13,6 +14,7 @@ const DEMO = [
 
 export default function Login() {
   const { login } = useAuth();
+  const notify = useNotify();
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: string } | null)?.from; // page that sent us here
@@ -27,6 +29,7 @@ export default function Login() {
     setError(null);
     try {
       const user = await login(emailValue, passwordValue);
+      notify(`Welcome back, ${user.name.split(" ")[0]}`);
       navigate(from ?? HOME_BY_ROLE[user.role], { replace: true });
     } catch (err) {
       setError(errorMessage(err));
